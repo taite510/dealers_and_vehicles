@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { getDatasetId, getVehicleIds, getVehicleData, getDealerData, postAnswer } from '../../server/API.js';
 
 function App(props) {
-
-  useEffect(() => {
+  const [ status, setStatus ] = useState({ isLoading: false, data: false })
+  let handleClick = () => {
+    setStatus({isLoading: true, data: false})
     getDatasetId((datasetId) => {
-      console.log(datasetId)
       getVehicleIds(datasetId, (vehicleIds) => {
-        console.log(vehicleIds)
         getVehicleData(datasetId, vehicleIds, (vehicleData) => {
-          console.log(vehicleData)
           let dealerArr = []
           vehicleData.map(({dealerId}) => {
             if(dealerArr.indexOf(dealerId) === -1) {
@@ -17,7 +15,6 @@ function App(props) {
             }
           })
           getDealerData(datasetId, dealerArr, (dealerData) => {
-            console.log(dealerData)
             let answer = {
               dealers: dealerData
             }
@@ -35,17 +32,34 @@ function App(props) {
               })
             })
             postAnswer(datasetId, answer, (response) => {
-              console.log(response)
+              setStatus({isLoading: false, data: response})
             })
           })
         })
       })
     })
-  }, [])
+  }
+  if (status.isLoading) {
+    return (
+      <button>
+        <img src='spiffygif_46x46.gif' alt="loading gif while page load"/>
+      </button>
+    )
+  } else if (!status.data) {
+    return (
+      <button onClick={handleClick}>GET/POST to API</button>
+    )
+  } else {
+    return (
+      <div>
+        <h1>{status.data.message}</h1>
+        <h4>Number of milliseconds: &nbsp;
+          <b>{status.data.totalMilliseconds}</b>
+        </h4>
+      </div>
+    )
+  }
 
-  return (
-    <h1>Hello world</h1>
-  )
 }
 
 export default App;
